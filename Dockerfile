@@ -13,7 +13,9 @@ RUN rm -rf src
 COPY . .
 
 # Build for release
-RUN touch src/main.rs && cargo build --release
+# Clear out the dummy main.rs from before to avoid conflicts
+RUN rm -f src/main.rs
+RUN cargo build --release
 
 # Runtime stage
 FROM ubuntu:24.04
@@ -28,8 +30,8 @@ RUN useradd -m -u 1001 appuser
 
 WORKDIR /app
 
-# Copy the binary and static files from the builder stage
-COPY --from=builder /app/target/debug/ /app/app
+# Copy the *release* binary and static files from the builder stage
+COPY --from=builder /app/target/release/actix_scraper /app/app
 COPY --from=builder /app/static ./static
 
 # Change ownership to non-root user
@@ -38,8 +40,18 @@ RUN chown -R appuser:appuser /app
 # Switch to non-root user
 USER appuser
 
-# Expose port 8000
-EXPOSE 8000
+# --- Modifications Start ---
+
+# Use an environment variable for the port.
+# This sets a default value of 8000.
+ENV PORT=8000
+
+# Expose the port defined by the $PORT environment variable
+EXPOSE $PORT
+
+# --- Modifications End ---
 
 # Run the binary
-CMD ["./actix_scraper"]
+# Your application code (e.g., in main.rs) should be written
+# to read the "PORT" environment variable to know which port to bind to.
+CMD ["./app"]
