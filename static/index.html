@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web Scraper</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: #ffffff;
+      min-height: 100vh;
+      padding: 40px 20px;
+      color: #000000;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      color: #000000;
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #666666;
+      margin-bottom: 40px;
+      font-size: 1rem;
+      font-weight: 400;
+    }
+    
+    .scrape-form {
+      background: #ffffff;
+      padding: 32px;
+      border-radius: 12px;
+      border: 2px solid #f0f0f0;
+      margin-bottom: 40px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .form-section {
+      margin-bottom: 24px;
+    }
+    
+    .form-section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #000000;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .optional-badge {
+      font-size: 0.75rem;
+      background: #f0f0f0;
+      color: #666666;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    
+    .input-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .input-full {
+      width: 100%;
+    }
+    
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      flex: 1;
+      min-width: 250px;
+      padding: 14px 18px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      color: #000000;
+      background: #ffffff;
+      transition: all 0.3s ease;
+    }
+    
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      border-color: #ff1493;
+      box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.1);
+    }
+    
+    input[type="text"]::placeholder,
+    input[type="email"]::placeholder,
+    input[type="password"]::placeholder {
+      color: #999999;
+    }
+    
+    button {
+      padding: 14px 32px;
+      border: none;
+      border-radius: 8px;
+      background: #ff1493;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+    
+    button:hover {
+      background: #ff0080;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 20, 147, 0.3);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .help-text {
+      font-size: 0.85rem;
+      color: #666666;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 60px 40px;
+      background: #ffffff;
+      border-radius: 12px;
+      border: 2px solid #f0f0f0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .loading p {
+      color: #000000;
+      font-size: 1.1rem;
+      margin-top: 20px;
+      font-weight: 500;
+    }
+    
+    .spinner {
+      border: 4px solid #f0f0f0;
+      border-top: 4px solid #ff1493;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .results {
+      display: none;
+    }
+    
+    .results.show {
+      display: block;
+    }
+    
+    .section {
+      background: #ffffff;
+      padding: 32px;
+      margin-bottom: 24px;
+      border-radius: 12px;
+      border: 2px solid #f0f0f0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+      color: #000000;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+    }
+    
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 28px;
+      background: #ff1493;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    
+    .metadata-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+    
+    .metadata-item {
+      background: #fafafa;
+      padding: 18px;
+      border-radius: 8px;
+      border-left: 3px solid #ff1493;
+    }
+    
+    .metadata-label {
+      font-size: 0.8rem;
+      color: #999999;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    
+    .metadata-value {
+      font-size: 1rem;
+      color: #000000;
+      font-weight: 500;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+    
+    .text-content {
+      background: #fafafa;
+      padding: 24px;
+      border-radius: 8px;
+      line-height: 1.8;
+      color: #333333;
+      border-left: 3px solid #ff1493;
+    }
+    
+    .text-content p {
+      margin-bottom: 16px;
+    }
+    
+    .text-content p:last-child {
+      margin-bottom: 0;
+    }
+    
+    .images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    
+    .image-card {
+      background: #fafafa;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .image-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      border-color: #ff1493;
+    }
+    
+    .image-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+    
+    .image-info {
+      padding: 12px;
+      font-size: 0.85rem;
+      color: #666666;
+      background: #ffffff;
+    }
+    
+    .links-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    
+    .link-item {
+      background: #fafafa;
+      padding: 16px;
+      border-radius: 8px;
+      border-left: 3px solid #ff1493;
+      transition: all 0.3s ease;
+    }
+    
+    .link-item:hover {
+      background: #f0f0f0;
+      transform: translateX(5px);
+    }
+    
+    .link-url {
+      font-size: 0.9rem;
+      color: #ff1493;
+      text-decoration: none;
+      word-break: break-all;
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      transition: color 0.3s ease;
+    }
+    
+    .link-url:hover {
+      color: #ff0080;
+      text-decoration: underline;
+    }
+    
+    .link-text {
+      font-size: 0.85rem;
+      color: #666666;
+    }
+    
+    .error {
+      background: #fff5f5;
+      color: #cc0000;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #cc0000;
+      font-weight: 500;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999999;
+      font-size: 1rem;
+    }
+    
+    .stats-badge {
+      display: inline-block;
+      background: #ff1493;
+      color: #ffffff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+    
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .input-group {
+        flex-direction: column;
+      }
+      
+      input[type="text"],
+      input[type="email"],
+      input[type="password"] {
+        min-width: auto;
+      }
+      
+      .scrape-form,
+      .section {
+        padding: 20px;
+      }
+      
+      .section-title {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Web Scraper</h1>
+    <p class="subtitle">Scrape any website with optional login support</p>
+    
+    <div class="scrape-form">
+      <form id="scrapeForm">
+        <div class="form-section">
+          <div class="form-section-title">Target URL</div>
+          <div class="input-group input-full">
+            <input type="text" id="url" placeholder="Enter URL to scrape (e.g., https://example.com)" required />
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">
+            Login Credentials 
+            <span class="optional-badge">Optional</span>
+          </div>
+          <p class="help-text">Leave empty to scrape public pages without authentication</p>
+          <div class="input-group">
+            <input type="email" id="email" placeholder="Email or username (optional)" />
+            <input type="password" id="password" placeholder="Password (optional)" />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <button type="submit" id="submitBtn">Scrape Website</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="loading" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p>Scraping website...</p>
+    </div>
+
+    <div id="results" class="results">
+      <div class="section">
+        <h2 class="section-title">Page Information</h2>
+        <div class="metadata-grid" id="metadataGrid"></div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Text Content</h2>
+        <div class="text-content" id="textContent"></div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Links Found<span class="stats-badge" id="linkCount">0</span></h2>
+        <div class="links-list" id="linksList"></div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Images Found<span class="stats-badge" id="imageCount">0</span></h2>
+        <div class="images-grid" id="imagesGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("scrapeForm");
+    const loading = document.getElementById("loading");
+    const results = document.getElementById("results");
+    const submitBtn = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const url = document.getElementById("url").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      
+      if (!url) {
+        alert("Please enter a URL to scrape.");
+        return;
+      }
+      
+      // Build request body
+      const requestBody = { url };
+      
+      // Only include login credentials if both email and password are provided
+      if (email && password) {
+        requestBody.login = { email, password };
+      }
+      
+      // Reset and show loading
+      results.classList.remove("show");
+      loading.style.display = "block";
+      submitBtn.disabled = true;
+
+      try {
+        const res = await fetch("/scrape", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        });
+
+        const data = await res.json();
+        
+        loading.style.display = "none";
+        submitBtn.disabled = false;
+
+        if (data.success) {
+          displayResults(data);
+        } else {
+          displayError(data.error || "Scraping failed");
+        }
+      } catch (err) {
+        loading.style.display = "none";
+        submitBtn.disabled = false;
+        displayError("Network error: " + err.message);
+      }
+    });
+
+    function displayResults(data) {
+      // Display Metadata
+      const metadataGrid = document.getElementById("metadataGrid");
+      
+      let loginStatusHtml = '';
+      if (data.login_attempted) {
+        const loginStatus = data.login_success 
+          ? "✓ Success" 
+          : data.requires_2fa 
+            ? "⚠ 2FA Required" 
+            : "✗ Failed";
+        loginStatusHtml = `
+          <div class="metadata-item">
+            <div class="metadata-label">Login Status</div>
+            <div class="metadata-value">${loginStatus}</div>
+          </div>
+          <div class="metadata-item">
+            <div class="metadata-label">Platform</div>
+            <div class="metadata-value">${data.platform_detected || "Generic"}</div>
+          </div>
+        `;
+      } else {
+        loginStatusHtml = `
+          <div class="metadata-item">
+            <div class="metadata-label">Authentication</div>
+            <div class="metadata-value">No login attempted</div>
+          </div>
+        `;
+      }
+      
+      metadataGrid.innerHTML = `
+        <div class="metadata-item">
+          <div class="metadata-label">Title</div>
+          <div class="metadata-value">${escapeHtml(data.title || "N/A")}</div>
+        </div>
+        <div class="metadata-item">
+          <div class="metadata-label">URL</div>
+          <div class="metadata-value">${escapeHtml(data.url || "N/A")}</div>
+        </div>
+        <div class="metadata-item">
+          <div class="metadata-label">Description</div>
+          <div class="metadata-value">${escapeHtml(data.description || "N/A")}</div>
+        </div>
+        ${loginStatusHtml}
+        <div class="metadata-item">
+          <div class="metadata-label">Scrape Status</div>
+          <div class="metadata-value">✓ Success</div>
+        </div>
+      `;
+
+      // Display Text Content
+      const textContent = document.getElementById("textContent");
+      if (data.text && data.text.length > 0) {
+        textContent.innerHTML = `<p>${escapeHtml(data.text)}</p>`;
+      } else {
+        textContent.innerHTML = '<div class="empty-state">No text content found</div>';
+      }
+
+      // Display Links
+      const linksList = document.getElementById("linksList");
+      const linkCount = document.getElementById("linkCount");
+      if (data.links && data.links.length > 0) {
+        linkCount.textContent = data.links.length;
+        linksList.innerHTML = data.links.map(link => `
+          <div class="link-item">
+            <a href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer" class="link-url">
+              ${escapeHtml(link.href)}
+            </a>
+            <div class="link-text">
+              ${link.text ? escapeHtml(link.text) : '<em>No anchor text</em>'}
+            </div>
+          </div>
+        `).join('');
+      } else {
+        linkCount.textContent = '0';
+        linksList.innerHTML = '<div class="empty-state">No links found</div>';
+      }
+
+      // Display Images
+      const imagesGrid = document.getElementById("imagesGrid");
+      const imageCount = document.getElementById("imageCount");
+      if (data.images && data.images.length > 0) {
+        imageCount.textContent = data.images.length;
+        imagesGrid.innerHTML = data.images.map(img => `
+          <div class="image-card">
+            <img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt || 'Image')}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22200%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-family=%22system-ui%22%3EImage unavailable%3C/text%3E%3C/svg%3E'" />
+            <div class="image-info">
+              ${img.alt ? escapeHtml(img.alt) : 'No description'}
+            </div>
+          </div>
+        `).join('');
+      } else {
+        imageCount.textContent = '0';
+        imagesGrid.innerHTML = '<div class="empty-state">No images found</div>';
+      }
+
+      results.classList.add("show");
+    }
+
+    function displayError(message) {
+      results.innerHTML = `
+        <div class="section">
+          <div class="error">
+            <strong>Error:</strong> ${escapeHtml(message)}
+          </div>
+        </div>
+      `;
+      results.classList.add("show");
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
