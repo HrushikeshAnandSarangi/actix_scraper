@@ -29,7 +29,7 @@ RUN useradd -m -u 1001 appuser
 WORKDIR /app
 
 # Copy the binary and static files from the builder stage
-COPY --from=builder /app/target/release/actix_scraper /app/app
+COPY --from=builder /app/target/debug/actix_scraper /app/app
 COPY --from=builder /app/static ./static
 
 # Change ownership to non-root user
