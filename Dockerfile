@@ -13,8 +13,6 @@ RUN rm -rf src
 COPY . .
 
 # Build for release
-# Clear out the dummy main.rs from before to avoid conflicts
-RUN rm -f src/main.rs
 RUN cargo build --release
 
 # Runtime stage
@@ -55,4 +53,5 @@ EXPOSE $PORT
 # Your application code (e.g., in main.rs) should be written
 # to read the "PORT" environment variable to know which port to bind to.
 CMD ["./app"]
+
 
