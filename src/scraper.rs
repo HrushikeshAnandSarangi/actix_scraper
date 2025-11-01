@@ -1,4 +1,4 @@
-// src/scraper.rs
+
 
 use crate::errors::ScrapeError;
 use crate::login::auto_login;
@@ -13,7 +13,6 @@ use futures::StreamExt;
 use std::time::Duration;
 use tokio::task;
 
-/// A wrapper for the browser and page to ensure proper cleanup.
 pub struct Scraper {
     browser: Option<Browser>,
     page: Page,
@@ -21,7 +20,6 @@ pub struct Scraper {
 }
 
 impl Scraper {
-    /// Creates a new Scraper instance, launching a headless browser.
     pub async fn new(headless: bool) -> Result<Self, ScrapeError> {
         let mut builder = BrowserConfig::builder()
             .request_timeout(Duration::from_secs(30))
@@ -42,14 +40,13 @@ impl Scraper {
             .await
             .map_err(|e| ScrapeError::BrowserLaunch(e.to_string()))?;
 
-        // Keep the handler running and don't let it die
         let _handler_handle = task::spawn(async move {
             while handler.next().await.is_some() {
-                // Keep processing events
+
             }
         });
 
-        // Give browser time to fully start
+
         tokio::time::sleep(Duration::from_millis(500)).await;
 
         let page = browser
@@ -57,7 +54,6 @@ impl Scraper {
             .await
             .map_err(|e| ScrapeError::PageCreation(e.to_string()))?;
 
-        // Give page time to initialize
         tokio::time::sleep(Duration::from_millis(500)).await;
 
         Self::setup_evasions(&page).await?;
@@ -69,7 +65,6 @@ impl Scraper {
         })
     }
 
-    /// Injects scripts to make the headless browser appear more like a real user's browser.
     async fn setup_evasions(page: &Page) -> Result<(), ScrapeError> {
         page.execute(SetUserAgentOverrideParams::new(
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
@@ -120,10 +115,7 @@ impl Scraper {
 
         Ok(())
     }
-
-    /// Triggers lazy-loaded content by scrolling the page incrementally.
     async fn scroll_for_lazy_content(&self) -> Result<(), ScrapeError> {
-        println!("📜 Scrolling to trigger lazy-loaded content...");
         let mut last_height: i64 = -1;
         for _ in 0..5 {
             let new_height = self
@@ -145,13 +137,11 @@ impl Scraper {
         Ok(())
     }
 
-    /// The main scraping logic for a given URL.
     pub async fn scrape(
         &self,
         url: &str,
         login: Option<LoginCredentials>,
     ) -> Result<ScrapedData, ScrapeError> {
-        // --- 1. Handle Login ---
         let (login_attempted, login_success, platform_detected, requires_2fa) =
             if let Some(credentials) = login {
                 match auto_login(&self.page, &credentials, url).await {
@@ -160,12 +150,10 @@ impl Scraper {
                             return Err(ScrapeError::TwoFactorAuthRequired);
                         }
                         if !success {
-                            println!("⚠️ Login failed, continuing without authentication...");
                         }
                         (true, Some(success), platform, tfa)
                     }
                     Err(e) => {
-                        println!("⚠️ Login error: {}, continuing without authentication...", e);
                         (true, Some(false), None, None)
                     }
                 }
@@ -173,7 +161,6 @@ impl Scraper {
                 (false, None, None, None)
             };
 
-        // --- 2. Navigate to Page ---
         let current_url = self
             .page
             .evaluate("window.location.href")
@@ -183,14 +170,11 @@ impl Scraper {
             .unwrap_or_default();
 
         if !current_url.starts_with(url) {
-            println!("🌐 Navigating to target URL: {}", url);
             
-            // Navigate with better error handling
             let nav_result = self.page.goto(url).await;
             
             match nav_result {
                 Ok(_) => {
-                    // Give the page time to load
                     tokio::time::sleep(Duration::from_millis(2000)).await;
                 }
                 Err(e) => {
@@ -198,9 +182,6 @@ impl Scraper {
                 }
             }
         }
-
-        // --- 3. Wait for content and trigger lazy loading ---
-        // Wait for DOM to be ready
         let wait_result = tokio::time::timeout(
             Duration::from_secs(10),
             async {
@@ -220,8 +201,6 @@ impl Scraper {
         
         self.scroll_for_lazy_content().await?;
 
-        println!("📊 Extracting page data...");
-        // --- 4. Extract Data ---
         let title = self.page.get_title().await.ok().flatten();
 
         let description = self
@@ -289,11 +268,6 @@ impl Scraper {
             .and_then(|v| v.into_value::<Vec<LinkData>>().ok())
             .unwrap_or_default();
 
-        println!("✅ Data extraction complete!");
-        println!("   - Title: {}", title.as_deref().unwrap_or("N/A"));
-        println!("   - Images: {}", images.len());
-        println!("   - Links: {}", links.len());
-
         Ok(ScrapedData {
             title,
             description,
@@ -319,7 +293,6 @@ impl Drop for Scraper {
     }
 }
 
-/// Public wrapper function to maintain a simple API.
 pub async fn do_scrape(
     url: &str,
     login: Option<LoginCredentials>,

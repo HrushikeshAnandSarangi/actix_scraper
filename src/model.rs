@@ -31,7 +31,7 @@ pub struct LoginCredentials {
     pub cookies: Option<Vec<CookieData>>,
 }
 
-#[derive(Deserialize, Clone, Serialize, Debug)] // Added Debug
+#[derive(Deserialize, Clone, Serialize, Debug)] 
 pub struct CookieData {
     pub name: String,
     pub value: String,
@@ -39,7 +39,7 @@ pub struct CookieData {
     pub path: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)] // Added Debug
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ImageData {
     pub src: String,
     pub alt: String,

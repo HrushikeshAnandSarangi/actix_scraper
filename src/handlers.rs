@@ -1,4 +1,3 @@
-// src/handlers.rs
 use actix_web::{HttpResponse, web, Responder};
 use crate::model::{ScrapeRequest, ScrapeResponse};
 use crate::scraper::do_scrape;

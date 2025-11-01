@@ -7,10 +7,7 @@ pub struct PlatformConfig {
     pub wait_after_login: u64,
     pub additional_checks: Option<Vec<&'static str>>,
 }
-
-/// Provides platform-specific configuration for login.
 pub fn get_platform_config(platform: &str) -> PlatformConfig {
-    // Note: We convert to lowercase to handle case-insensitive platform input.
     match platform.to_lowercase().as_str() {
         "linkedin" => PlatformConfig {
             login_url: "https://www.linkedin.com/login",
